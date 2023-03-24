@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.apache.ibatis.learn.StudentMapper">
+
+    <resultMap type="org.apache.ibatis.learn.StudentDO" id="StudentMap">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="age" column="age"/>
+        <result property="birthday" column="birthday"/>
+        <result property="province" column="province"/>
+        <result property="city" column="city"/>
+        <result property="area" column="area"/>
+        <result property="address" column="address"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryOne" resultMap="StudentMap">
+        select
+          id, name, age, birthday, province, city, area, address
+        from student
+        where id = #{id}
+    </select>
+
+  <sql id="allFields" >
+    id, name, age, birthday, province, city, area, address
+  </sql>
+
+    <!--查询所有数据-->
+    <select id="queryAll" resultMap="StudentMap">
+        select
+          <include refid="allFields" />
+        from student
+    </select>
+
+    <!--查询指定行数据-->
+<!--    <select id="queryAllByLimit" resultMap="StudentMap">-->
+<!--        select-->
+<!--          id, name, age, birthday, province, city, area, address-->
+<!--        from student-->
+<!--        <where>-->
+<!--            <if test="name != null and name != ''">-->
+<!--                and name = #{name}-->
+<!--            </if>-->
+<!--            <if test="age != null and age.length > 1">-->
+<!--                and age &gt;= #{age[0], javaType=Integer} and age &lt; #{age[1], javaType=Integer}-->
+<!--            </if>-->
+<!--            <if test="birthday != null">-->
+<!--                and birthday = #{birthday}-->
+<!--            </if>-->
+<!--            <if test="province != null and province.length > 0">-->
+<!--            <foreach collection="province" item="item" open="and province in (" separator="," close=")">-->
+<!--                #{item}-->
+<!--            </foreach>-->
+<!--            </if>-->
+<!--            <if test="city != null and city.length > 0">-->
+<!--            <foreach collection="city" item="item" open="and city in (" separator="," close=")">-->
+<!--                #{item}-->
+<!--            </foreach>-->
+<!--            </if>-->
+<!--            <if test="area != null and area.length > 0">-->
+<!--            <foreach collection="area" item="item" open="and area in (" separator="," close=")">-->
+<!--                #{item}-->
+<!--            </foreach>-->
+<!--            </if>-->
+<!--            <if test="address != null and address != ''">-->
+<!--                and address = #{address}-->
+<!--            </if>-->
+<!--        </where>-->
+<!--    </select>-->
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into student(name, age, birthday, province, city, area, address)
+        values (#{name}, #{age}, #{birthday}, #{province}, #{city}, #{area}, #{address})
+    </insert>
+
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into student(name, age, birthday, province, city, area, address)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+        (#{entity.name}, #{entity.age}, #{entity.birthday}, #{entity.province}, #{entity.city}, #{entity.area}, #{entity.address})
+        </foreach>
+    </insert>
+
+    <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into student(name, age, birthday, province, city, area, address)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.name}, #{entity.age}, #{entity.birthday}, #{entity.province}, #{entity.city}, #{entity.area}, #{entity.address})
+        </foreach>
+        on duplicate key update
+        name = values(name),
+        age = values(age),
+        birthday = values(birthday),
+        province = values(province),
+        city = values(city),
+        area = values(area),
+        address = values(address)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update student
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="age != null">
+                age = #{age},
+            </if>
+            <if test="birthday != null">
+                birthday = #{birthday},
+            </if>
+            <if test="province != null and province != ''">
+                province = #{province},
+            </if>
+            <if test="city != null and city != ''">
+                city = #{city},
+            </if>
+            <if test="area != null and area != ''">
+                area = #{area},
+            </if>
+            <if test="address != null and address != ''">
+                address = #{address},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteOne">
+        delete from student where id = #{id}
+    </delete>
+
+</mapper>
+
