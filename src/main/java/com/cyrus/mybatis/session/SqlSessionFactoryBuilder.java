@@ -1,6 +1,7 @@
 package com.cyrus.mybatis.session;
 
 import com.cyrus.mybatis.datasource.MyDataSource;
+import com.cyrus.mybatis.util.DocumentUtil;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
@@ -27,7 +28,7 @@ public class SqlSessionFactoryBuilder {
       DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
       Document document = documentBuilder.parse(resourceAsStream);
 
-      Element configurationElement = getConfiguration(document);
+      Element configurationElement = DocumentUtil.getElement(document, "configuration");
       Configuration configuration = buildConfiguration(configurationElement);
 
       return new DefaultSqlSessionFactory(configuration);
@@ -60,7 +61,7 @@ public class SqlSessionFactoryBuilder {
   }
 
   private void processMapper(Element configurationElement, Configuration configuration) {
-    Element mappers = getElement(configurationElement, "mappers");
+    Element mappers = DocumentUtil.getElement(configurationElement, "mappers");
     NodeList mapper = mappers.getElementsByTagName("mapper");
     for (int i = 0; i < mapper.getLength(); i++) {
       Element mapperElement = (Element) mapper.item(i);
@@ -71,7 +72,7 @@ public class SqlSessionFactoryBuilder {
 
   private void processEnvironment(Element configurationElement, Configuration configuration) {
     // 解析environments节点
-    Element environments = getElement(configurationElement, "environments");
+    Element environments = DocumentUtil.getElement(configurationElement, "environments");
 
     // 解析每个environment节点，将其转换成DataSource对象
     NodeList environment = environments.getElementsByTagName("environment");
@@ -108,7 +109,7 @@ public class SqlSessionFactoryBuilder {
   }
 
   private Element getDefaultEnvironment(Element configuration) {
-    Element environments = getElement(configuration, "environments");
+    Element environments = DocumentUtil.getElement(configuration, "environments");
     String defaultEnvironment = environments.getAttribute("default");
 
     NodeList environment = environments.getElementsByTagName("environment");
@@ -122,14 +123,4 @@ public class SqlSessionFactoryBuilder {
     return null;
   }
 
-  private Element getConfiguration(Document document) {
-    NodeList configuration = document.getElementsByTagName("configuration");
-    Element configurationElement = (Element) configuration.item(0);
-    return configurationElement;
-  }
-
-  private Element getElement(Element element, String tagName) {
-    NodeList nodeList = element.getElementsByTagName(tagName);
-    return (Element) nodeList.item(0);
-  }
 }
