@@ -1,7 +1,11 @@
 package com.cyrus.mybatis.proxy;
 
+import com.cyrus.mybatis.session.MappedStatement;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Description here
@@ -10,18 +14,26 @@ import java.lang.reflect.Method;
  * @since 2023-03-24 3:54 PM
  */
 public class MapperInvocationHandler implements InvocationHandler {
-//  private Map<String, SqlExecutor> sqlExecutorMap;
+  private final Map<String, MappedStatement> statementMap;
 
-  private String nameSpace;
+  public MapperInvocationHandler() {
+    statementMap = new HashMap<>();
+  }
 
-  public MapperInvocationHandler(String nameSpace) {
-    this.nameSpace = nameSpace;
+  public void addMappedStatement(String id, MappedStatement mappedStatement) {
+    statementMap.put(id, mappedStatement);
   }
 
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     String name = method.getName();
 
-    return null;
+    MappedStatement mappedStatement = statementMap.get(name);
+
+    if (mappedStatement != null) {
+      return mappedStatement.execute(args);
+    } else {
+      throw new RuntimeException("No statement found for " + name);
+    }
   }
 }
