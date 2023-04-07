@@ -268,6 +268,10 @@ public class XNode {
     return children;
   }
 
+  /**
+   * 子元素的name属性作为key，value属性作为value，组成Properties对象
+   * @return
+   */
   public Properties getChildrenAsProperties() {
     Properties properties = new Properties();
     for (XNode child : getChildren()) {
