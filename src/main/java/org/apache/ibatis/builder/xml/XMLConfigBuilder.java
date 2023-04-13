@@ -118,13 +118,16 @@ public class XMLConfigBuilder extends BaseBuilder {
       propertiesElement(root.evalNode("properties"));
 
       Properties settings = settingsAsProperties(root.evalNode("settings"));
+      // todo: 什么是vfs？
       loadCustomVfs(settings);
       loadCustomLogImpl(settings);
 
       typeAliasesElement(root.evalNode("typeAliases"));
       pluginElement(root.evalNode("plugins"));
       objectFactoryElement(root.evalNode("objectFactory"));
+      // todo: objectWrapper是用来干嘛的？
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
+      // todo: reflectorFactory是用来干嘛的？
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
       settingsElement(settings);
       // read it after objectFactory and objectWrapperFactory issue #631
@@ -200,7 +203,9 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void pluginElement(XNode parent) throws Exception {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
+        // 获取拦截器的类名
         String interceptor = child.getStringAttribute("interceptor");
+        // 获取拦截器的属性 <property name="name" value="value"/>
         Properties properties = child.getChildrenAsProperties();
         Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).getDeclaredConstructor().newInstance();
         interceptorInstance.setProperties(properties);

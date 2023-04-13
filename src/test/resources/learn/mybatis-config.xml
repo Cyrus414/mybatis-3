@@ -17,7 +17,7 @@
 
   <mappers>
 <!--    <mapper resource="learn/StudentMapper.xml"/>-->
-    <mapper resource="learn/TestIncludeMapper.xml"/>
-    <mapper resource="learn/TestIncludeMapper2.xml"/>
+<!--    <mapper resource="learn/TestIncludeMapper.xml"/>-->
+<!--    <mapper resource="learn/TestIncludeMapper2.xml"/>-->
   </mappers>
 </configuration>
