@@ -184,6 +184,13 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   //
   // HANDLE RESULT SETS
   //
+
+  /**
+   * 处理结果集，将结果包装成List<Object>返回
+   * @param stmt
+   * @return
+   * @throws SQLException
+   */
   @Override
   public List<Object> handleResultSets(Statement stmt) throws SQLException {
     ErrorContext.instance().activity("handling results").object(mappedStatement.getId());
@@ -191,13 +198,19 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     final List<Object> multipleResults = new ArrayList<>();
 
     int resultSetCount = 0;
+    // 获取结果集包装对象
     ResultSetWrapper rsw = getFirstResultSet(stmt);
 
+    // 获取ResultMap，就是我们在Mapper.xml中配置的ResultMap
     List<ResultMap> resultMaps = mappedStatement.getResultMaps();
     int resultMapCount = resultMaps.size();
+    // 有结果集但是没有ResultMap，抛出异常
     validateResultMapsCount(rsw, resultMapCount);
+
+    // 处理结果集，如果有多个结果集，就会循环处理
     while (rsw != null && resultMapCount > resultSetCount) {
       ResultMap resultMap = resultMaps.get(resultSetCount);
+      // 处理结果集
       handleResultSet(rsw, resultMap, multipleResults, null);
       rsw = getNextResultSet(stmt);
       cleanUpAfterHandlingResultSet();
@@ -228,20 +241,34 @@ public class DefaultResultSetHandler implements ResultSetHandler {
 
     ResultSetWrapper rsw = getFirstResultSet(stmt);
 
+    // 获取 ResultMap 对象
+    // ResultMap 对象是在解析映射文件时创建的，存储了映射文件中的 <resultMap> 标签的信息
     List<ResultMap> resultMaps = mappedStatement.getResultMaps();
 
     int resultMapCount = resultMaps.size();
+
+    // 有数据但是没有配置 ResultMap
     validateResultMapsCount(rsw, resultMapCount);
+
+    // cursor 只能有一个 ResultMap
     if (resultMapCount != 1) {
       throw new ExecutorException("Cursor results cannot be mapped to multiple resultMaps");
     }
 
+    // resultMaps 中只有一个 ResultMap 对象
     ResultMap resultMap = resultMaps.get(0);
     return new DefaultCursor<>(this, resultMap, rsw, rowBounds);
   }
 
+  /**
+   * 创建 ResultSetWrapper 对象
+   * @param stmt
+   * @return
+   * @throws SQLException
+   */
   private ResultSetWrapper getFirstResultSet(Statement stmt) throws SQLException {
     ResultSet rs = stmt.getResultSet();
+    // 部分数据库驱动，比如 HSQLDB 2.1，不会返回第一个 ResultSet 对象，需要通过 getMoreResults() 方法获取
     while (rs == null) {
       // move forward to get the first resultset in case the driver
       // doesn't return the resultset as the first result (HSQLDB 2.1)
@@ -254,6 +281,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
         }
       }
     }
+    // 包装成 ResultSetWrapper 对象
     return rs != null ? new ResultSetWrapper(rs, configuration) : null;
   }
 
@@ -355,9 +383,17 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       throws SQLException {
     DefaultResultContext<Object> resultContext = new DefaultResultContext<>();
     ResultSet resultSet = rsw.getResultSet();
+    // 跳过指定行数，比如 RowBounds 中的 offset
+    // 如果resultSet支持跳转，那么直接跳转到指定行数，否则循环跳过指定行数，效率低
     skipRows(resultSet, rowBounds);
+
+    // 循环处理每一行数据
     while (shouldProcessMoreRows(resultContext, rowBounds) && !resultSet.isClosed() && resultSet.next()) {
+
+      // 获取当前行的结果集映射
+      // 由于支持多态，所以需要根据当前行的数据来决定使用哪个 ResultMap
       ResultMap discriminatedResultMap = resolveDiscriminatedResultMap(resultSet, resultMap, null);
+
       Object rowValue = getRowValue(rsw, discriminatedResultMap, null);
       storeObject(resultHandler, resultContext, rowValue, parentMapping, resultSet);
     }
@@ -401,7 +437,9 @@ public class DefaultResultSetHandler implements ResultSetHandler {
 
   private Object getRowValue(ResultSetWrapper rsw, ResultMap resultMap, String columnPrefix) throws SQLException {
     final ResultLoaderMap lazyLoader = new ResultLoaderMap();
+    // 创建结果对象
     Object rowValue = createResultObject(rsw, resultMap, lazyLoader, columnPrefix);
+    // 使用类型处理器将结果集中的数据转换成 Java 对象
     if (rowValue != null && !hasTypeHandlerForResultObject(rsw, resultMap.getType())) {
       final MetaObject metaObject = configuration.newMetaObject(rowValue);
       boolean foundValues = this.useConstructorMappings;
@@ -640,6 +678,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     final List<Class<?>> constructorArgTypes = new ArrayList<>();
     final List<Object> constructorArgs = new ArrayList<>();
     Object resultObject = createResultObject(rsw, resultMap, constructorArgTypes, constructorArgs, columnPrefix);
+
     if (resultObject != null && !hasTypeHandlerForResultObject(rsw, resultMap.getType())) {
       final List<ResultMapping> propertyMappings = resultMap.getPropertyResultMappings();
       for (ResultMapping propertyMapping : propertyMappings) {
@@ -654,6 +693,17 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     return resultObject;
   }
 
+  /**
+   * 创建结果对象实例
+   *
+   * @param rsw
+   * @param resultMap
+   * @param constructorArgTypes
+   * @param constructorArgs
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private Object createResultObject(ResultSetWrapper rsw, ResultMap resultMap, List<Class<?>> constructorArgTypes, List<Object> constructorArgs, String columnPrefix)
       throws SQLException {
     final Class<?> resultType = resultMap.getType();
@@ -933,7 +983,11 @@ public class DefaultResultSetHandler implements ResultSetHandler {
 
   public ResultMap resolveDiscriminatedResultMap(ResultSet rs, ResultMap resultMap, String columnPrefix) throws SQLException {
     Set<String> pastDiscriminators = new HashSet<>();
+    // q：discriminator 是什么
+    // a：discriminator 是 resultMap 的一个属性，用于处理多态的情况
     Discriminator discriminator = resultMap.getDiscriminator();
+
+    // 根据 discriminator 的值，获取对应的 resultMap
     while (discriminator != null) {
       final Object value = getDiscriminatorValue(rs, discriminator, columnPrefix);
       final String discriminatedMapId = discriminator.getMapIdFor(String.valueOf(value));

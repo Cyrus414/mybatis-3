@@ -311,15 +311,26 @@ public final class MappedStatement {
     return resultSets;
   }
 
+  /**
+   * 获取BoundSql对象，并且设置参数映射
+   * @param parameterObject
+   * @return
+   */
   public BoundSql getBoundSql(Object parameterObject) {
+    // 从sqlSource中获取BoundSql对象
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
+    // 获取参数映射
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
+    // 如果参数映射为空，或者参数映射的数量为0，那么就创建一个新的BoundSql对象
+    // 拿不到boundSql的参数映射就拿mappedStatement的参数映射
     if (parameterMappings == null || parameterMappings.isEmpty()) {
       boundSql = new BoundSql(configuration, boundSql.getSql(), parameterMap.getParameterMappings(), parameterObject);
     }
 
     // check for nested result maps in parameter mappings (issue #30)
+    // 检查参数映射中是否有嵌套的结果映射
     for (ParameterMapping pm : boundSql.getParameterMappings()) {
+      // 配置了resultMapId并且resultMapId不为空且能够从configuration中获取到resultMap
       String rmId = pm.getResultMapId();
       if (rmId != null) {
         ResultMap rm = configuration.getResultMap(rmId);

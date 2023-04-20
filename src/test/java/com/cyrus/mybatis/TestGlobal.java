@@ -6,6 +6,7 @@ import com.cyrus.mybatis.session.SqlSessionFactory;
 import com.cyrus.mybatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.learn.StudentDO;
 import org.apache.ibatis.learn.StudentMapper;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;

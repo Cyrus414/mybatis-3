@@ -30,9 +30,24 @@ import org.apache.ibatis.session.ResultHandler;
  */
 public interface StatementHandler {
 
+  /**
+   * 创建Statement对象并设置参数：
+   * 超时时间、fetchSize、ResultSetType、是否返回自动生成的主键、是否批量执行等
+   *
+   * @param connection
+   * @param transactionTimeout
+   * @return
+   * @throws SQLException
+   */
   Statement prepare(Connection connection, Integer transactionTimeout)
       throws SQLException;
 
+  /**
+   * 设置参数
+   *
+   * @param statement
+   * @throws SQLException
+   */
   void parameterize(Statement statement)
       throws SQLException;
 

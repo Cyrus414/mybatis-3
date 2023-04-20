@@ -119,9 +119,13 @@ public class DefaultSqlSession implements SqlSession {
   @Override
   public <T> Cursor<T> selectCursor(String statement, Object parameter, RowBounds rowBounds) {
     try {
+      // 根据statement id获取MappedStatement对象
       MappedStatement ms = configuration.getMappedStatement(statement);
+      // 判断是否是脏查询
       dirty |= ms.isDirtySelect();
+      // 执行查询并返回Cursor对象
       Cursor<T> cursor = executor.queryCursor(ms, wrapCollection(parameter), rowBounds);
+      // 注册Cursor对象， 就是将Cursor对象添加到cursorList中
       registerCursor(cursor);
       return cursor;
     } catch (Exception e) {
@@ -148,7 +152,11 @@ public class DefaultSqlSession implements SqlSession {
 
   private <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds, ResultHandler handler) {
     try {
+      // 根据statement id获取MappedStatement对象
       MappedStatement ms = configuration.getMappedStatement(statement);
+      // q: 下面这段代码什么意思
+      // a: 用于判断是否是脏查询，如果是脏查询，那么就会清空本地缓存
+      //   什么是脏查询？就是查询的结果会影响到其他的查询结果
       dirty |= ms.isDirtySelect();
       return executor.query(ms, wrapCollection(parameter), rowBounds, handler);
     } catch (Exception e) {

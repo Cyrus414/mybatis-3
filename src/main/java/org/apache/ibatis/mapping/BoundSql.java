@@ -62,6 +62,7 @@ public class BoundSql {
   }
 
   public boolean hasAdditionalParameter(String name) {
+    // name = paramName[index].children
     String paramName = new PropertyTokenizer(name).getName();
     return additionalParameters.containsKey(paramName);
   }

@@ -58,8 +58,11 @@ public class SimpleExecutor extends BaseExecutor {
     Statement stmt = null;
     try {
       Configuration configuration = ms.getConfiguration();
+      // 创建StatementHandler对象
       StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
+      // 创建Statement对象并设置参数
       stmt = prepareStatement(handler, ms.getStatementLog());
+      // 执行查询并返回结果
       return handler.query(stmt, resultHandler);
     } finally {
       closeStatement(stmt);
@@ -69,8 +72,11 @@ public class SimpleExecutor extends BaseExecutor {
   @Override
   protected <E> Cursor<E> doQueryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds, BoundSql boundSql) throws SQLException {
     Configuration configuration = ms.getConfiguration();
+    // 创建StatementHandler对象
     StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, null, boundSql);
+    // 创建Statement对象并设置参数
     Statement stmt = prepareStatement(handler, ms.getStatementLog());
+    // 执行查询并返回Cursor对象
     Cursor<E> cursor = handler.queryCursor(stmt);
     stmt.closeOnCompletion();
     return cursor;
@@ -81,10 +87,21 @@ public class SimpleExecutor extends BaseExecutor {
     return Collections.emptyList();
   }
 
+  /**
+   * 创建Statement对象并设置参数
+   *
+   * @param handler
+   * @param statementLog
+   * @return
+   * @throws SQLException
+   */
   private Statement prepareStatement(StatementHandler handler, Log statementLog) throws SQLException {
     Statement stmt;
     Connection connection = getConnection(statementLog);
+    // 创建Statement对象
     stmt = handler.prepare(connection, transaction.getTimeout());
+
+    // 设置参数
     handler.parameterize(stmt);
     return stmt;
   }

@@ -131,8 +131,11 @@ public abstract class BaseExecutor implements Executor {
 
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
+    // 创建 BoundSql 对象
     BoundSql boundSql = ms.getBoundSql(parameter);
+    // 创建 CacheKey 对象，CacheKey 是 MyBatis 的缓存键，用于缓存查询结果
     CacheKey key = createCacheKey(ms, parameter, rowBounds, boundSql);
+    // 查询
     return query(ms, parameter, rowBounds, resultHandler, key, boundSql);
   }
 
@@ -143,16 +146,21 @@ public abstract class BaseExecutor implements Executor {
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
+    // q：queryStack 用来干嘛的？
+    // a：queryStack 用来记录嵌套查询的层级，如果是嵌套查询，则不清空本地缓存
     if (queryStack == 0 && ms.isFlushCacheRequired()) {
       clearLocalCache();
     }
     List<E> list;
     try {
       queryStack++;
+      // 查看本地缓存（一级缓存）中是否存在，如果存在则直接返回
       list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
+      // 如果本地缓存中不存在，则从数据库中查询
       if (list != null) {
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
       } else {
+        // 缓存中不存在，从数据库中查询
         list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql);
       }
     } finally {
@@ -174,7 +182,9 @@ public abstract class BaseExecutor implements Executor {
 
   @Override
   public <E> Cursor<E> queryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds) throws SQLException {
+    // 获取 BoundSql 对象
     BoundSql boundSql = ms.getBoundSql(parameter);
+    // 执行boundSql并返回cursor
     return doQueryCursor(ms, parameter, rowBounds, boundSql);
   }
 
@@ -320,6 +330,8 @@ public abstract class BaseExecutor implements Executor {
 
   private <E> List<E> queryFromDatabase(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
     List<E> list;
+    // q：为什么要先放一个占位符，再查询，再放入真正的结果？
+    // a：因为在并发的情况下，可能会有多个线程同时查询，如果不先放一个占位符，那么就会有多个线程同时查询
     localCache.putObject(key, EXECUTION_PLACEHOLDER);
     try {
       list = doQuery(ms, parameter, rowBounds, resultHandler, boundSql);

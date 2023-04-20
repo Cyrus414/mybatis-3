@@ -5,6 +5,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.submitted.permissions.Resource;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,7 +18,23 @@ import java.util.List;
  * @since 2022-12-28 9:03 AM
  */
 public class Learn1 {
-  public static void main(String[] args) throws IOException {
+
+  @Test
+  public void testByStatementId() throws IOException {
+    InputStream resourceAsStream = Resources.getResourceAsStream("learn/mybatis-config.xml");
+
+    SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
+    SqlSessionFactory factory = builder.build(resourceAsStream);
+
+    try (SqlSession sqlSession = factory.openSession()) {
+      List<StudentDO> studentDOList = sqlSession.selectList("org.apache.ibatis.learn.StudentMapper.queryAll");
+
+      System.out.println(studentDOList);
+    }
+  }
+
+  @Test
+  public void testByMapper() throws IOException {
     InputStream resourceAsStream = Resources.getResourceAsStream("learn/mybatis-config.xml");
 
     SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
