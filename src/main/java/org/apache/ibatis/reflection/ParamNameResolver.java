@@ -144,6 +144,13 @@ public class ParamNameResolver {
   }
 
   /**
+   * 将参数对象包装为 ParamMap：
+   * 1. 如果是Collection，{"collection": object}
+   * 2. 如果是List，{"list": object， "collection": object}
+   * 3. 如果是数组，{"array": object}
+   * 4. 额外的参数名，{actualParamName: object}
+   * 5. 其他情况，直接返回object
+   *
    * Wrap to a {@link ParamMap} if object is {@link Collection} or array.
    *
    * @param object a parameter object

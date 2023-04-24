@@ -142,6 +142,7 @@ public class DefaultSqlSession implements SqlSession {
 
   @Override
   public <E> List<E> selectList(String statement, Object parameter) {
+    // 调用selectList方法，RowBounds参数使用默认值：无限制
     return this.selectList(statement, parameter, RowBounds.DEFAULT);
   }
 
@@ -158,6 +159,7 @@ public class DefaultSqlSession implements SqlSession {
       // a: 用于判断是否是脏查询，如果是脏查询，那么就会清空本地缓存
       //   什么是脏查询？就是查询的结果会影响到其他的查询结果
       dirty |= ms.isDirtySelect();
+      // 将查询任务委托给Executor执行，并返回查询结果
       return executor.query(ms, wrapCollection(parameter), rowBounds, handler);
     } catch (Exception e) {
       throw ExceptionFactory.wrapException("Error querying database.  Cause: " + e, e);
