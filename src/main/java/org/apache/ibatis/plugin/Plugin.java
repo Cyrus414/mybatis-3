@@ -41,11 +41,21 @@ public class Plugin implements InvocationHandler {
     this.signatureMap = signatureMap;
   }
 
+  /**
+   * Wrap target object with the list of interceptors.
+   *
+   * @param target can be one of: Executor, ParameterHandler, ResultSetHandler, StatementHandler
+   * @param interceptor plugin instance
+   * @return
+   */
   public static Object wrap(Object target, Interceptor interceptor) {
+    // proxy type -> method(method name, parameter types)
     Map<Class<?>, Set<Method>> signatureMap = getSignatureMap(interceptor);
     Class<?> type = target.getClass();
+    // 获取所有与声明的拦截器相关的接口
     Class<?>[] interfaces = getAllInterfaces(type, signatureMap);
     if (interfaces.length > 0) {
+      // 生成代理对象
       return Proxy.newProxyInstance(
           type.getClassLoader(),
           interfaces,
@@ -68,12 +78,14 @@ public class Plugin implements InvocationHandler {
   }
 
   private static Map<Class<?>, Set<Method>> getSignatureMap(Interceptor interceptor) {
+    // 拦截器必须有@Intercepts注解
     Intercepts interceptsAnnotation = interceptor.getClass().getAnnotation(Intercepts.class);
     // issue #251
     if (interceptsAnnotation == null) {
       throw new PluginException("No @Intercepts annotation was found in interceptor " + interceptor.getClass().getName());
     }
     Signature[] sigs = interceptsAnnotation.value();
+    // proxy type -> method(methodName, parameterTypes)
     Map<Class<?>, Set<Method>> signatureMap = new HashMap<>();
     for (Signature sig : sigs) {
       Set<Method> methods = MapUtil.computeIfAbsent(signatureMap, sig.type(), k -> new HashSet<>());
@@ -87,6 +99,12 @@ public class Plugin implements InvocationHandler {
     return signatureMap;
   }
 
+  /**
+   *
+   * @param type: Executor, ParameterHandler, ResultSetHandler, StatementHandler
+   * @param signatureMap
+   * @return
+   */
   private static Class<?>[] getAllInterfaces(Class<?> type, Map<Class<?>, Set<Method>> signatureMap) {
     Set<Class<?>> interfaces = new HashSet<>();
     while (type != null) {
